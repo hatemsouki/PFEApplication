@@ -1,6 +1,6 @@
 <?php
   
-  echo 'Bonjour bien venue a  notre PFE ';
+  echo 'le 27/06/2021 bien venue a  notre PFE ';
      
 ?> 
 <!DOCTYPE html>
