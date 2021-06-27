@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+ 
+   
+    stages {
+      stage('Build') {
+            steps {
+                echo 'building'
+                
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']],           extensions: [], userRemoteConfigs: [[url: 'https://github.com/hatemsouki/Application.git']]])
+              
+                 }
+             }
+              stage('Archive') {
+            steps {
+                echo 'Artifact'
+                
+                archiveArtifacts artifacts: '**', followSymlinks: false
+              
+                 }
+             }
+          stage('test') {
+            steps {
+                echo 'test unitaire et fonctionnel'
+                //./vendor/bin/phpunit 
+                
+                 }
+             }
+             stage('test code') {
+                  
+                 environment {
+		     	scannerHome = tool 'SonarQube-Scanner'
+		    }
+                  
+                     steps {
+                         echo 'test code '
+               
+                         
+                 withSonarQubeEnv ('SonarServer'){
+                     sh """${scannerHome}/bin/sonar-scanner  -D sonar.login=admin -D sonar.password=admin -D sonar.projectKey=pfe  -D sonar.projectKey=pfe -D sonar.sources=. """
+   
+                     }
+                     }
+                  
+              }
+			  stage('test securite') {
+            steps {
+                echo 'test injection my sql'
+                 //
+                
+                 }
+             }
+         
+           stage('build docker') {
+            steps {
+                echo 'build image docker '
+                 
+                sh "docker build . -t khouildisihem/app-pfe:v.${env.BUILD_NUMBER} "
+                 }
+             }
+             stage('build push') {
+            steps {
+                echo 'docker puch hub '
+                withCredentials([string(credentialsId: 'docker-hub', variable: 'dockerPSW')]) {
+                    sh "docker login -u khouildisihem -p ${dockerPSW}"
+                    sh "docker push khouildisihem/app-pfe:v.${env.BUILD_NUMBER} "
+                   
+              }
+                       
+                 }
+                 
+    
+             }
+              
+    
+    
+        
+       }    
+    } 
+    
